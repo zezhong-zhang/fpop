@@ -193,9 +193,9 @@ class PrepVasp(PrepFp):
         Path('POTCAR').write_text(
             vasp_inputs.make_potcar(tmp_frame['atom_names'])
         )
-        Path('KPOINTS').write_text(
-            vasp_inputs.make_kpoints(conf_frame['cells'][0])
-        )
+        # Path('KPOINTS').write_text(
+        #     vasp_inputs.make_kpoints(conf_frame['cells'][0])
+        # )
 
         if optional_artifact:
             for file_name, file_path in optional_artifact.items():
@@ -211,7 +211,8 @@ class RunVasp(RunFp):
         files: List[str]
             A list of madatory input files names.
         '''
-        return ["POSCAR", "INCAR", "POTCAR", "KPOINTS"]
+        return ["POSCAR", "INCAR", "POTCAR"]
+        # return ["POSCAR", "INCAR", "POTCAR", "KPOINTS"]
 
     def run_task(
         self,
