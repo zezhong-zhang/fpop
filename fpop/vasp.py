@@ -29,6 +29,11 @@ from dflow.python import (
     BigParameter,
 )
 
+from custodian.custodian import Custodian
+from custodian.vasp.handlers import VaspErrorHandler, \
+    UnconvergedErrorHandler, AliasingErrorHandler, MeshSymmetryErrorHandler,StdErrHandler,VaspErrorHandler
+from custodian.vasp.jobs import VaspJob
+
 class VaspInputs():
     def __init__(
             self,
@@ -193,9 +198,9 @@ class PrepVasp(PrepFp):
         Path('POTCAR').write_text(
             vasp_inputs.make_potcar(tmp_frame['atom_names'])
         )
-        # Path('KPOINTS').write_text(
-        #     vasp_inputs.make_kpoints(conf_frame['cells'][0])
-        # )
+        Path('KPOINTS').write_text(
+            vasp_inputs.make_kpoints(conf_frame['cells'][0])
+        )
 
         if optional_artifact:
             for file_name, file_path in optional_artifact.items():
@@ -211,8 +216,8 @@ class RunVasp(RunFp):
         files: List[str]
             A list of madatory input files names.
         '''
-        return ["POSCAR", "INCAR", "POTCAR"]
-        # return ["POSCAR", "INCAR", "POTCAR", "KPOINTS"]
+        # return ["POSCAR", "INCAR", "POTCAR"]
+        return ["POSCAR", "INCAR", "POTCAR", "KPOINTS"]
 
     def run_task(
         self,
@@ -253,16 +258,21 @@ class RunVasp(RunFp):
         else:
             command = "vasp_std"
         # run vasp
-        command = " ".join([command, ">", log_name])
-        ret, out, err = run_command(command, raise_error=False, try_bash=True,)
-        if ret != 0:
-            raise TransientError(
-                "vasp failed\n", "out msg", out, "\n", "err msg", err, "\n"
-            )
-        if not self.check_run_success():
-            raise TransientError(
-                "vasp failed , we could not check the exact cause . Please check log file ."
-            )
+        # command = " ".join([command, ">", log_name])
+        # ret, out, err = run_command(command, raise_error=False, try_bash=True,)
+        # if ret != 0:
+        #     raise TransientError(
+        #         "vasp failed\n", "out msg", out, "\n", "err msg", err, "\n"
+        #     )
+        # if not self.check_run_success():
+        #     raise TransientError(
+        #         "vasp failed , we could not check the exact cause . Please check log file ."
+        #     )
+        handlers = [VaspErrorHandler(), UnconvergedErrorHandler(),
+                AliasingErrorHandler(),MeshSymmetryErrorHandler(),StdErrHandler(),VaspErrorHandler()]
+        jobs = [VaspJob(vasp_cmd=command.split(),output_file=log_name,stderr_file=log_name)]
+        c = Custodian(handlers, jobs, max_errors=10)
+        c.run()
         os.makedirs(Path(backward_dir_name))
         shutil.copyfile(log_name,Path(backward_dir_name)/log_name)
         for ii in backward_list:
