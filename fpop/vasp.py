@@ -268,9 +268,9 @@ class RunVasp(RunFp):
         #     raise TransientError(
         #         "vasp failed , we could not check the exact cause . Please check log file ."
         #     )
-        handlers = [VaspErrorHandler(), UnconvergedErrorHandler(),
-                AliasingErrorHandler(),MeshSymmetryErrorHandler(),StdErrHandler(),VaspErrorHandler()]
-        jobs = [VaspJob(vasp_cmd=command.split(),output_file=log_name,stderr_file=log_name)]
+        handlers = [VaspErrorHandler(output_filename=log_name), UnconvergedErrorHandler(),
+                AliasingErrorHandler(output_filename=log_name),MeshSymmetryErrorHandler(output_filename=log_name),StdErrHandler(),VaspErrorHandler(output_filename=log_name)]
+        jobs = [VaspJob(vasp_cmd=command.split(),output_file=log_name)]
         c = Custodian(handlers, jobs, max_errors=10)
         c.run()
         os.makedirs(Path(backward_dir_name))
