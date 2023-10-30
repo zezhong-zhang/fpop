@@ -273,6 +273,8 @@ class RunVasp(RunFp):
         jobs = [VaspJob(vasp_cmd=command.split(),output_file=log_name)]
         c = Custodian(handlers, jobs, max_errors=10)
         c.run()
+        if os.path.exists(Path(backward_dir_name)):
+            shutil.rmtree(Path(backward_dir_name))
         os.makedirs(Path(backward_dir_name))
         shutil.copyfile(log_name,Path(backward_dir_name)/log_name)
         for ii in backward_list:
