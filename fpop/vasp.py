@@ -268,14 +268,15 @@ class RunVasp(RunFp):
         #     raise TransientError(
         #         "vasp failed , we could not check the exact cause . Please check log file ."
         #     )
+
         handlers = [VaspErrorHandler(output_filename=log_name), UnconvergedErrorHandler(),
                 AliasingErrorHandler(output_filename=log_name),MeshSymmetryErrorHandler(output_filename=log_name),StdErrHandler(),VaspErrorHandler(output_filename=log_name)]
         jobs = [VaspJob(vasp_cmd=command.split(),output_file=log_name)]
         c = Custodian(handlers, jobs, max_errors=10)
         c.run()
-        if os.path.exists(Path(backward_dir_name)):
-            shutil.rmtree(Path(backward_dir_name))
-        os.makedirs(Path(backward_dir_name))
+
+        if os.path.exists(Path(backward_dir_name)) is False:
+            os.makedirs(Path(backward_dir_name))
         shutil.copyfile(log_name,Path(backward_dir_name)/log_name)
         for ii in backward_list:
             shutil.copyfile(ii,Path(backward_dir_name)/ii)
